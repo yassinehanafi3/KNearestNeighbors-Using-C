@@ -6,13 +6,11 @@
 #include <math.h>
 #include "knn.h"
 
-void retrieveData(FILE* file, ligne *dataset){
-    int numRows = 765 ;
+void retrieveData(FILE* file, ligne *dataset, int numRows){
     int j = 0;
     char * line = NULL;
     char * read = NULL;
     size_t len = 0;
-    bool first = true;
 
     if(file == NULL) {
         printf("Error!");   
@@ -26,49 +24,34 @@ void retrieveData(FILE* file, ligne *dataset){
         
         token = strtok(line,",");
         while( token != NULL ) {
-            if (first == false){
-                table[i] = atof(token);
-                i++;
-            }
+            table[i] = atof(token);
+            i++;
             token = strtok(NULL, ",");
         }
-        if (first == false){
-            dataset[j].att.Pregnancies = (int)table[0] ;
-            dataset[j].att.Glucose = (int)table[1];
-            dataset[j].att.BloodPressure = (int)table[2];
-            dataset[j].att.SkinThickness = (int)table[3];
-            dataset[j].att.Insulin = (int)table[4];
-            dataset[j].att.BMI = table[5];
-            dataset[j].att.DiabetesPedigreeFunction = table[6];
-            dataset[j].att.Age = table[7];
-            dataset[j].outcome = (int)table[8];
-            //printf("%d, %d, %d, %d, %d, %f, %f, %d, Outcome == %d \n",dataset[j].att.Pregnancies, dataset[j].att.Glucose, dataset[j].att.BloodPressure, dataset[j].att.SkinThickness, dataset[j].att.Insulin, dataset[j].att.BMI, dataset[j].att.DiabetesPedigreeFunction, dataset[j].att.Age, dataset[j].outcome);
-            j++;
-        }
-        first = false;
+        dataset[j].att.Pregnancies = (int)table[0] ;
+        dataset[j].att.Glucose = (int)table[1];
+        dataset[j].att.BloodPressure = (int)table[2];
+        dataset[j].att.SkinThickness = (int)table[3];
+        dataset[j].att.Insulin = (int)table[4];
+        dataset[j].att.BMI = table[5];
+        dataset[j].att.DiabetesPedigreeFunction = table[6];
+        dataset[j].att.Age = (int) table[7];
+        dataset[j].outcome = (int)table[8];
+        
+        //printf("%d %d %d %d %d %f %f %d %d \n",dataset[j].att.Pregnancies, dataset[j].att.Glucose, dataset[j].att.BloodPressure, dataset[j].att.SkinThickness, dataset[j].att.Insulin, dataset[j].att.BMI, dataset[j].att.DiabetesPedigreeFunction, dataset[j].att.Age, dataset[j].outcome);
+        j++;
     }
-
-    Attributes_means means;
-    means = CalculateMeans(dataset, numRows);
-    printf("Means\n");
-        //printf("%f, %f, %f, %f, %f, %f, %f, %f \n",means.Pregnancies, means.Glucose, means.BloodPressure, means.SkinThickness, means.Insulin, means.BMI, means.DiabetesPedigreeFunction, means.Age);
-    dataset[j].att.Pregnancies = dataset[j].att.Pregnancies == 0? means.Pregnancies:dataset[j].att.Pregnancies;
-    dataset[j].att.Glucose = dataset[j].att.Glucose== 0? means.Glucose:dataset[j].att.Glucose;
-    dataset[j].att.BloodPressure = dataset[j].att.BloodPressure== 0? means.BloodPressure:dataset[j].att.BloodPressure;
-    dataset[j].att.SkinThickness = dataset[j].att.SkinThickness== 0? means.SkinThickness:dataset[j].att.SkinThickness;
-    dataset[j].att.Insulin = dataset[j].att.Insulin== 0? means.Insulin:dataset[j].att.Insulin;
-    dataset[j].att.BMI =dataset[j].att.BMI== 0? means.BMI:dataset[j].att.BMI;
-    dataset[j].att.DiabetesPedigreeFunction = dataset[j].att.DiabetesPedigreeFunction== 0? means.DiabetesPedigreeFunction:dataset[j].att.DiabetesPedigreeFunction;
-    dataset[j].att.Age = dataset[j].att.Age? means.Age:dataset[j].att.Age;
     fclose(file);
 }
 
 
-void GetDistance(ligne *dataset, distanceAndOutcome *distAndOutcome, ligne test_set){
-    int i = 0, numRows = 765;
+void GetDistance(ligne *dataset, distanceAndOutcome *distAndOutcome, ligne test_set, int numRows){
+    int i = 0;
+
     for (i = 0; i < numRows ; i++){
+        
         distAndOutcome[i].distance = sqrt(
-            pow(test_set.att.Age - dataset[i].att.Age,2) + 
+            pow(test_set.att.Age - dataset[i].att.Age,2)+
             pow(test_set.att.BloodPressure - dataset[i].att.BloodPressure,2) +
             pow(test_set.att.BMI-dataset[i].att.BMI,2) +
             pow(test_set.att.DiabetesPedigreeFunction-dataset[i].att.DiabetesPedigreeFunction,2) +
@@ -78,120 +61,104 @@ void GetDistance(ligne *dataset, distanceAndOutcome *distAndOutcome, ligne test_
             pow(test_set.att.SkinThickness-dataset[i].att.SkinThickness,2)
         );
         distAndOutcome[i].outcome = (int) dataset[i].outcome;
-        distAndOutcome[i].line = i + 2;
+        distAndOutcome[i].line = i + 1;
     }
 }
 
 
-void SortByDistance(distanceAndOutcome *distAndOutcome){
-    int numRows = 765;
-    int i = 0, j;
+void SortByDistance(distanceAndOutcome *distAndOutcome, int numRows){
+    int i = 0, j = 0;
     distanceAndOutcome temp;
 
+    for (i = 0; i < numRows; i++) {
 
-    for (i = 0; i < numRows; i++)
-    {
-        for (j = i + 1; j < (numRows); j++)
-        {
-            if (distAndOutcome[i].distance > distAndOutcome[j].distance)
-            {
+        for (j = i + 1; j < (numRows); j++) {
+
+            if (distAndOutcome[i].distance > distAndOutcome[j].distance){
+
                 temp = distAndOutcome[i];
                 distAndOutcome[i] = distAndOutcome[j];
                 distAndOutcome[j] = temp;
-            }
-            
+
+            }  
         }
     }
 } 
 
 
 float KNN(ligne *dataset, ligne test_set, int k, int numRows){
-    int x,j;
+    int x;
     float pourcentage;
+    float allOutcome = 0;
+
     distanceAndOutcome *distAndOutcome = malloc(numRows * sizeof (*distAndOutcome));
     
-    GetDistance(dataset, distAndOutcome, test_set);
-    SortByDistance(distAndOutcome);
-    
-    
-    int allOutcome = 0;
+    GetDistance(dataset, distAndOutcome, test_set, numRows);
+    SortByDistance(distAndOutcome, numRows);
+
+    /*printf(" --------------------------------------------------------\n");
+    printf(" Les %d plus proche voisin avec la distance et l'outcome \n",k);
+    printf(" --------------------------------------------------------\n");*/
     for (x = 0; x < k; x++){
-        //printf("distance : %f, outcome: %d, line: %d \n",distAndOutcome[x].distance,distAndOutcome[x].outcome, distAndOutcome[x].line);
-        if (distAndOutcome[x].outcome == 0 || distAndOutcome[x].outcome == 1){
-            allOutcome += distAndOutcome[x].outcome;
-        }
+        //printf(" Distance : %f, Outcome: %d, Ligne: %d \n",distAndOutcome[x].distance,distAndOutcome[x].outcome, distAndOutcome[x].line);
+        allOutcome += distAndOutcome[x].outcome;
     }
-    printf("%d \n",allOutcome);
-    printf("K === %d : \n allOutcome == %d \n Pourcentage d'etre 1 est === %f \n",k, allOutcome, (float) allOutcome/k);
-    return (float) allOutcome/k;
+    pourcentage = allOutcome/k;
+    return pourcentage;
 }
 
 
-void NormalizeDataset(ligne *dataset, int numRows){
-    int i,j = 0;
-    int max = getMaxOfAge(dataset, numRows), min = getMinOfAge(dataset, numRows);
-    for (i = 0; i < numRows ; i++){
-        if (dataset[i].att.Age == max){
-            dataset[i].att.Age = 1;
-        }
-        else if (dataset[i].att.Age == min){
-            dataset[i].att.Age = 0;
-        }
-        else {
-            dataset[i].att.Age = (dataset[i].att.Age - min)/max;
-        }
-        //printf("%f \n", dataset[j].att.Age);
+void Test_Algo_from_file (ligne* test_set, ligne* dataset, int k , int numRows){
+    int predicted_value[12], i = 0;
+    float var;
+    int j = 0;
+    for (i=0; i < 12; i++){
+        var = KNN(dataset, test_set[i], k, numRows);
+        predicted_value[i] = var>0.5?1:0;
         j++;
     }
-
-}
-
-int getMaxOfAge(ligne *dataset, int numRows){
-    int max;
-    int i;
-    max = dataset[0].att.Age;
-    for (i = 1; i < numRows ; i++){
-        if (max < dataset[i].att.Age){
-            max = dataset[i].att.Age;
+    printf("\n---------------------------\n");
+    printf("| predicted  ||   wanted  |\n");
+    printf("---------------------------\n");
+    int right_answer = 0;
+    for (i=0; i < 12; i++){
+        if (predicted_value[i] == test_set[i].outcome){
+            right_answer+=1;
         }
+        printf("| %d          ||         %d |\n",predicted_value[i],test_set[i].outcome);
     }
-    return max;
+    printf("---------------------------\n");
+    printf("\n---------------------------\n");
+    printf("Model Accuray est %.2f%% \n",(float)right_answer/12 *100);
+    printf("---------------------------\n");
+
 }
 
-int getMinOfAge(ligne *dataset, int numRows){
-    int min;
-    int i;
-    min = dataset[0].att.Age;
-    for (i = 1; i < numRows ; i++){
-        if (min > dataset[i].att.Age){
-            min = dataset[i].att.Age;
-        }
-    }
-    return min;
-}
+void test_Algo_one_value(ligne* dataset, int numRows, int k){
+    ligne test_set;
+    float predict;
 
+    printf(" --------------------------------------\n");
+    printf(" Donnez les valeurs pour tester svp : \n");
+    printf(" --------------------------------------\n\n");
+    printf(" Donnez la valeur du Pregnancies : ");scanf("%d",&test_set.att.Pregnancies);
+    printf(" Donnez la valeur du Glucose : ");scanf("%d",&test_set.att.Glucose);
+    printf(" Donnez la valeur du BloodPressure : ");scanf("%d",&test_set.att.BloodPressure);
+    printf(" Donnez la valeur du SkinThickness : ");scanf("%d",&test_set.att.SkinThickness);
+    printf(" Donnez la valeur du Insulin : ");scanf("%d",&test_set.att.Insulin);
+    printf(" Donnez la valeur du BMI : ");scanf("%f",&test_set.att.BMI);
+    printf(" Donnez la valeur du DiabetesPedigreeFunction : ");scanf("%f",&test_set.att.DiabetesPedigreeFunction);
+    printf(" Donnez la valeur du Age : ");scanf("%d",&test_set.att.Age);
 
-Attributes_means CalculateMeans(ligne *dataset, int numRows){
-    int i;
-    Attributes_means means;
-    for (i = 0; i < numRows ; i++){ 
-        means.Pregnancies += dataset[i].att.Pregnancies;
-        means.Glucose += dataset[i].att.Glucose;
-        means.BloodPressure += dataset[i].att.BloodPressure;
-        means.SkinThickness += dataset[i].att.SkinThickness;
-        means.Insulin += dataset[i].att.Insulin;
-        means.BMI += dataset[i].att.BMI;
-        means.DiabetesPedigreeFunction += dataset[i].att.DiabetesPedigreeFunction;
-        means.Age += dataset[i].att.Age;
+    predict = KNN(dataset, test_set, k, numRows);
+    printf("\n");
+    printf("\n");
+    printf(" -----------------------\n");
+    printf(" Le test est : ");
+    if (predict > 0.5){
+        printf("Positive \n");
+    }else {
+        printf(" Negative \n");
     }
-    means.Pregnancies = means.Pregnancies / numRows;
-    means.Glucose = means.Glucose / numRows;
-    means.BloodPressure = means.BloodPressure / numRows;
-    means.SkinThickness = means.SkinThickness / numRows;
-    means.Insulin = means.Insulin / numRows;
-    means.BMI = means.BMI / numRows;
-    means.DiabetesPedigreeFunction = means.DiabetesPedigreeFunction / numRows;
-    means.Age = means.Age / numRows;
-    
-    return means;
+    printf(" -----------------------\n");
 }

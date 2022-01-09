@@ -8,53 +8,40 @@
 
 
 int main() {
-    int i, x, numRows = 765, k = 11;
-	float predict;
-    
-    FILE *file;
+
+    int numRows = 756, k = 11, choixMenu;
+    FILE *file, *file_test;
+
     file = fopen("./dataset/diabetes.csv","r");
-    
+    file_test = fopen("./dataset/test_set.csv","r");
+
     ligne *dataset = malloc(numRows * sizeof (*dataset));
-    retrieveData(file, dataset);
-    NormalizeDataset(dataset, numRows);
-    //printf("%f, %f, %f, %f, %f, %f, %f, %f \n",means.Pregnancies, means.Glucose, means.BloodPressure, means.SkinThickness, means.Insulin, means.BMI, means.DiabetesPedigreeFunction, means.Age);
-    ligne test_set;
-    printf("--------------------------------------\n");
-    printf("Donnez les valeurs pour tester svp : \n");
-    printf("--------------------------------------\n\n");
-    printf("Donnez la valeur du Pregnancies : ");scanf("%d",&test_set.att.Pregnancies);
-    printf("Donnez la valeur du Glucose : ");scanf("%d",&test_set.att.Glucose);
-    printf("Donnez la valeur du BloodPressure : ");scanf("%d",&test_set.att.BloodPressure);
-    printf("Donnez la valeur du SkinThickness : ");scanf("%d",&test_set.att.SkinThickness);
-    printf("Donnez la valeur du Insulin : ");scanf("%d",&test_set.att.Insulin);
-    printf("Donnez la valeur du BMI : ");scanf("%f",&test_set.att.BMI);
-    printf("Donnez la valeur du DiabetesPedigreeFunction : ");scanf("%f",&test_set.att.DiabetesPedigreeFunction);
-    printf("Donnez la valeur du Age : ");scanf("%f",&test_set.att.Age);
-
-    
-    // test_set 1   "10, 115, 0, 0, 0, 35.3, 0.134, 29, outcome = 0"
-    // test_set 2   "7, 103, 66, 32, 0, 39.1, 0.344, 31, outcome = 1"
-    // test_set 3   "7, 105, 0, 0, 0, 0, 0.305, 24, outcome = 0" 
+    retrieveData(file, dataset, numRows);
+    ligne* test_set = malloc(12 * sizeof (*test_set));
+    retrieveData(file_test, test_set, 12);
 
 
+    while(1){
+        system("cls");
+        printf("\n");
+        printf("--------------------------------\n\n");
+        printf("------------- Menu -------------\n\n");
+        printf("--------------------------------\n\n");
+        printf("1.Predire pour une valeur test\n");
+        printf("2.Predire pour tout le fichier test_set et afficher l'accuracy\n");
+        printf("3.Exit\n");
+        printf("\nVotre choix?\n\n");
+        scanf("%d", &choixMenu);
 
+        switch(choixMenu) {
+            case 1:test_Algo_one_value(dataset, numRows, k);system("pause");break;
+            case 2:Test_Algo_from_file(test_set, dataset, k, numRows);system("pause");break;
+            case 3:exit(0);break;
+            default:printf("Donnez une valeur (1, 2, 3)!");break;
+        }
+    }
 
-    /*test_set.att.Pregnancies = 7;
-    test_set.att.Glucose = 103;
-    test_set.att.BloodPressure = 66;
-    test_set.att.SkinThickness = 32;
-    test_set.att.Insulin = 0;
-    test_set.att.BMI = 39.1;
-    test_set.att.DiabetesPedigreeFunction = 0.344;
-    test_set.att.Age = 31;*/
-    //test_set.outcome = 1;
-    
-    predict = KNN(dataset, test_set, k, numRows);
-	printf("Outcome est %f",predict);
-
-    printf("%f", getMaxOfAge(dataset, numRows));
-    //printf("Hellow World!");
-    
     fclose(file);
+    fclose(file_test);
     return 0;
 }
